@@ -15,9 +15,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 
-app.get('/', (req, res) => {
-  res.send('here is server site!')
-})
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.1eg3a.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 console.log(uri);
 
@@ -25,12 +22,24 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 client.connect(err => {
   const productCollection = client.db("halalValley").collection("products");
 
+
   app.get("/product", (req, res) => {
     productCollection.find()
       .toArray((err, product) => {
         res.send(product)
         console.log('from database', product)
+
       })
+  })
+
+  app.get("/checkout/:id", (req, res) => {
+    const id = ObjectID(req.params.id);
+    productCollection.findOne({_id:id})
+    .then((product) => {
+      res.send(product)
+      console.log('from database', product)
+    })
+  
   })
 
   app.post('/addProduct', (req, res) => {
@@ -64,8 +73,13 @@ client.connect(err => {
   // })
 
   // client.close();
+
 });
 
+app.get('/', (req, res) => {
+  res.send('here is server site!')
+  
+})
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
